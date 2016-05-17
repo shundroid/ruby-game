@@ -4,6 +4,19 @@ class ScreenInfo
   def initialize width, height
     @width = width
     @height = height
+
+    # 画面全体をクリア
+    printf "\e[2J"
+    # カーソルを非表示
+    printf "\e[?25l"
+
+    at_exit {
+      # カーソル位置を変更
+      printf "\e[#{height + 1};0H"
+      # カーソルを表示
+      printf "\e[?25h"
+    }
+
   end
   def getWidth
     return @width
@@ -18,20 +31,6 @@ class Cursor
   def initialize
     @cursorColumn = 0
     @cursorRow = 0
-
-    # 画面全体をクリア
-    printf "\e[2J"
-
-    # カーソルを非表示
-    printf "\e[?25l"
-
-    at_exit {
-      # 画面全体をクリア
-      printf "\e[2J"
-
-      # カーソルを表示
-      printf "\e[?25h"
-    }
   end
 
   def write column, row, text
