@@ -24,29 +24,36 @@ class ScreenInfo
     return @height
   end
 end
-screen = ScreenInfo.new 100, 10
+screen = ScreenInfo.new 20, 10
 
 class Cursor
-  def initialize
-    @cursorColumn = 0
-    @cursorRow = 0
+  def initialize screenInfoInstance
+    @screenInfoInstance = screenInfoInstance;
   end
 
   def write column, row, text
-    @cursorColumn = column
-    @cursorRow = row
-    updateCursor
+    updateCursor row, column
     print text
+  end
+  def writeDebugLog log
+    clearText = " "
+    (0..@screenInfoInstance.getWidth).each do
+      clearText += " "
+    end
+    updateCursor @screenInfoInstance.getHeight + 1, 0
+    print clearText
+    updateCursor @screenInfoInstance.getHeight + 1, 0
+    print log
   end
 
   private
-  def updateCursor
-    printf "\e[#{@cursorRow};#{@cursorColumn}H"
+  def updateCursor row, column
+    printf "\e[#{row};#{column}H"
   end
 
 end
 
-cursor = Cursor.new
+cursor = Cursor.new screen
 
 class Line
   def initialize width, y, cursorInstance, screenInfoInstance
@@ -55,6 +62,7 @@ class Line
     @cursorInstance = cursorInstance
     @screenInfoInstance = screenInfoInstance
     @charX = 0
+    @charDirection = 1
 
     backText = ""
     for x in 0..@width do
@@ -69,16 +77,27 @@ class Line
   end
 
   def moveChar
-    @charX += 1
+    @charX += @charDirection
     updateChar
+    updateCharDirection
   end
 
   private
   def updateChar
-    if @charX > 0 then
-      @cursorInstance.write (@charX - 1), @line, getBack(@charX - 1)
+    if @charDirection == 1 && @charX > 0 then
+      @cursorInstance.write @charX - 1, @line, getBack(@charX - 2)
+    elsif @charDirection == -1 && @charX <= @screenInfoInstance.getWidth then
+      @cursorInstance.write @charX + 1, @line, getBack(@charX)
     end
-    @cursorInstance.write @charX, @line, ">"
+    @cursorInstance.write @charX, @line, getCharText
+  end
+
+  def updateCharDirection
+    if @charDirection == 1 && @charX > @screenInfoInstance.getWidth then
+      @charDirection = -1
+    elsif @charDirection == -1 && @charX - 1 <= 0 then
+      @charDirection = 1
+    end
   end
 
   def getBack x
@@ -86,6 +105,13 @@ class Line
       return "|"
     end
     return "-"
+  end
+
+  def getCharText
+    if @charDirection == 1 then
+      return ">"
+    end
+    return "<"
   end
 end
 
