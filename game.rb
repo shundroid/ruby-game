@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 class ScreenInfo
   def initialize width, height
     @width = width
@@ -50,39 +49,56 @@ end
 cursor = Cursor.new
 
 class Line
-  def initialize width, y, cursorInstance
+  def initialize width, y, cursorInstance, screenInfoInstance
     @width = width
     @line = y
     @cursorInstance = cursorInstance
+    @screenInfoInstance = screenInfoInstance
+    @charX = 0
 
     backText = ""
     for x in 0..@width do
-      backText += "-"
+      backText += getBack x
     end
     @cursorInstance.write 0, @line, backText
   end
 
   def spawnChar
     @charX = 0
-    @charY = 0
     updateChar
   end
 
   def moveChar
-
+    @charX += 1
+    updateChar
   end
 
   private
   def updateChar
-    @cursorInstance.write @charX, @charY, ">"
+    if @charX > 0 then
+      @cursorInstance.write (@charX - 1), @line, getBack(@charX - 1)
+    end
+    @cursorInstance.write @charX, @line, ">"
+  end
+
+  def getBack x
+    if x > @screenInfoInstance.getWidth - 2 then
+      return "|"
+    end
+    return "-"
   end
 end
 
 lines = []
 for y in 0..screen.getHeight do
-  lines.push Line.new(screen.getWidth, y, cursor)
+  lines.push Line.new(screen.getWidth, y, cursor, screen)
 end
 lines[0].spawnChar
 
-sleep 1
+loop do
+  lines.each do |line|
+    line.moveChar
+  end
+  sleep 0.05
+end
 
