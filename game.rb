@@ -87,18 +87,3 @@ lines[0].spawnChar
 
 sleep 1
 
-=begin
-(0..screenWidth).each do |count|
-  # > が表示されているときはまず消す
-  if ballPoint > 0 then
-    printf "\e[#{ballPoint}G"
-    STDOUT.flush
-    print "-"
-  end
-  print ">"
-
-  sleep 0.05
-  ballPoint += 1
-end
-=end
-
