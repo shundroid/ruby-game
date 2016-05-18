@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+require "thread"
+require "io/console"
+
 class ScreenInfo
   def initialize width, height
     @width = width
@@ -83,8 +86,8 @@ class Line
   end
 
   def throwChar
-    if @charX > @screenInfoInstance.getWidth then
-
+    if @charX > @screenInfoInstance.getWidth - 2 then
+      @cursorInstance.writeDebugLog "hoge!"
     end
   end
 
@@ -122,6 +125,19 @@ for y in 0..screen.getHeight do
   lines.push Line.new(screen.getWidth, y, cursor, screen)
 end
 lines[0].spawnChar
+
+Thread.new do
+  while (key = STDIN.getch) != "\C-c"
+    if key.inspect == "\" \"" then
+      lines.each do |line|
+        line.throwChar
+      end
+    end
+  end
+
+  # C-c を押されたら終了
+  exit
+end
 
 loop do
   lines.each do |line|
