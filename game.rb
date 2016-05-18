@@ -27,7 +27,7 @@ class ScreenInfo
     return @height
   end
 end
-screen = ScreenInfo.new 20, 1
+screen = ScreenInfo.new 50, 30
 
 class Cursor
   def initialize screenInfoInstance
@@ -75,11 +75,6 @@ class Line
     @cursorInstance.write 0, @line, backText
   end
 
-  def spawnChar
-    @charX = 0
-    updateChar
-  end
-
   def moveChar
     if @charX > @screenInfoInstance.getWidth then
       @isDead = true
@@ -96,7 +91,6 @@ class Line
       return
     end
     if @charX >= @screenInfoInstance.getWidth - 3 then
-      @cursorInstance.writeDebugLog "hoge!"
       @charDirection = -1
     end
   end
@@ -134,7 +128,6 @@ lines = []
 for y in 0..screen.getHeight do
   lines.push Line.new(screen.getWidth, y, cursor, screen)
 end
-lines[0].spawnChar
 
 Thread.new do
   while (key = STDIN.getch) != "\C-c"
@@ -149,9 +142,15 @@ Thread.new do
   exit
 end
 
+lastSpawnedLine = 0
 loop do
-  lines.each do |line|
-    line.moveChar
+  if lastSpawnedLine < lines.length then
+    lastSpawnedLine += 1
+  end
+  lines.each_with_index do |line, index|
+    if index <= lastSpawnedLine then
+      line.moveChar
+    end
   end
   sleep 0.05
 end
