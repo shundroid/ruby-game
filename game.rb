@@ -66,6 +66,7 @@ class Line
     @screenInfoInstance = screenInfoInstance
     @charX = 0
     @charDirection = 1
+    @isDead = false
 
     backText = ""
     for x in 0..@width do
@@ -80,14 +81,23 @@ class Line
   end
 
   def moveChar
-    updateCharDirection
-    @charX += @charDirection
-    updateChar
+    if @charX > @screenInfoInstance.getWidth then
+      @isDead = true
+      updateChar
+    elsif !@isDead then
+      updateCharDirection
+      @charX += @charDirection
+      updateChar
+    end
   end
 
   def throwChar
-    if @charX > @screenInfoInstance.getWidth - 2 then
+    if @isDead then
+      return
+    end
+    if @charX >= @screenInfoInstance.getWidth - 3 then
       @cursorInstance.writeDebugLog "hoge!"
+      @charDirection = -1
     end
   end
 
@@ -98,22 +108,22 @@ class Line
   end
 
   def updateCharDirection
-    if @charDirection == 1 && @charX >= @screenInfoInstance.getWidth then
-      @charDirection = -1
-    elsif @charDirection == -1 && @charX <= 0 then
+    if @charDirection == -1 && @charX <= 0 then
       @charDirection = 1
     end
   end
 
   def getBack x
-    if x > @screenInfoInstance.getWidth - 2 then
+    if x > @screenInfoInstance.getWidth - 3 then
       return "|"
     end
     return " "
   end
 
   def getCharText
-    if @charDirection == 1 then
+    if @isDead then
+      return "X"
+    elsif @charDirection == 1 then
       return ">"
     end
     return "<"
@@ -128,7 +138,7 @@ lines[0].spawnChar
 
 Thread.new do
   while (key = STDIN.getch) != "\C-c"
-    if key.inspect == "\" \"" then
+    if key.inspect == "\"a\"" then
       lines.each do |line|
         line.throwChar
       end
