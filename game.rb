@@ -24,7 +24,7 @@ class ScreenInfo
     return @height
   end
 end
-screen = ScreenInfo.new 20, 10
+screen = ScreenInfo.new 20, 1
 
 class Cursor
   def initialize screenInfoInstance
@@ -104,7 +104,7 @@ class Line
     if x > @screenInfoInstance.getWidth - 2 then
       return "|"
     end
-    return "-"
+    return " "
   end
 
   def getCharText
