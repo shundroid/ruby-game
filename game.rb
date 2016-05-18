@@ -48,7 +48,7 @@ class Cursor
 
   private
   def updateCursor row, column
-    printf "\e[#{row};#{column}H"
+    printf "\e[#{row};#{column + 1}H"
   end
 
 end
@@ -77,25 +77,27 @@ class Line
   end
 
   def moveChar
+    updateCharDirection
     @charX += @charDirection
     updateChar
-    updateCharDirection
+  end
+
+  def throwChar
+    if @charX > @screenInfoInstance.getWidth then
+
+    end
   end
 
   private
   def updateChar
-    if @charDirection == 1 && @charX > 0 then
-      @cursorInstance.write @charX - 1, @line, getBack(@charX - 2)
-    elsif @charDirection == -1 && @charX <= @screenInfoInstance.getWidth then
-      @cursorInstance.write @charX + 1, @line, getBack(@charX)
-    end
+    @cursorInstance.write @charX - @charDirection, @line, getBack(@charX - @charDirection)
     @cursorInstance.write @charX, @line, getCharText
   end
 
   def updateCharDirection
-    if @charDirection == 1 && @charX > @screenInfoInstance.getWidth then
+    if @charDirection == 1 && @charX >= @screenInfoInstance.getWidth then
       @charDirection = -1
-    elsif @charDirection == -1 && @charX - 1 <= 0 then
+    elsif @charDirection == -1 && @charX <= 0 then
       @charDirection = 1
     end
   end
