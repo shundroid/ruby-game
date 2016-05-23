@@ -2,10 +2,11 @@
 require "thread"
 require "io/console"
 
-class ScreenInfo
+class Screen
   def initialize width, height
     @width = width
     @height = height
+    @screenLines = [""]
 
     # 画面全体をクリア
     printf "\e[2J"
@@ -26,26 +27,33 @@ class ScreenInfo
   def getHeight
     return @height
   end
-end
-screen = ScreenInfo.new 50, 30
-
-class Cursor
-  def initialize screenInfoInstance
-    @screenInfoInstance = screenInfoInstance;
-  end
 
   def write column, row, text
-    updateCursor row, column
-    print text
+    if row >= @screenLines.length then
+      @screenLines.push ""
+    end
+    if column >= @screenLines[row].length then
+      [@screenLines[row].length - 1 .. column - 1].each do
+        @screenLines[row] << " ";
+      end
+    end
+    @screenLines[row].slice column, text.length
+    @screenLines[row].insert column, text
   end
+
+  def draw
+    updateCursor 0, 0
+    print @screenLines.join "\n"
+  end
+
   def writeDebugLog log
     clearText = " "
-    (0..@screenInfoInstance.getWidth).each do
-      clearText += " "
+    (0..@screenInstance.getWidth).each do
+      clearText << " "
     end
-    updateCursor @screenInfoInstance.getHeight + 1, 0
+    updateCursor @screenInstance.getHeight + 1, 0
     print clearText
-    updateCursor @screenInfoInstance.getHeight + 1, 0
+    updateCursor @screenInstance.getHeight + 1, 0
     print log
   end
 
@@ -53,17 +61,14 @@ class Cursor
   def updateCursor row, column
     printf "\e[#{row};#{column + 1}H"
   end
-
 end
-
-cursor = Cursor.new screen
+screen = Screen.new 30, 30
 
 class Line
-  def initialize width, y, cursorInstance, screenInfoInstance
+  def initialize width, y, screenInstance
     @width = width
     @line = y
-    @cursorInstance = cursorInstance
-    @screenInfoInstance = screenInfoInstance
+    @screenInstance = screenInstance
     @charX = 0
     @charDirection = 1
     @isDead = false
@@ -72,11 +77,11 @@ class Line
     for x in 0..@width do
       backText += getBack x
     end
-    @cursorInstance.write 0, @line, backText
+    @screenInstance.write 0, @line, backText
   end
 
   def moveChar
-    if @charX > @screenInfoInstance.getWidth then
+    if @charX > @screenInstance.getWidth then
       @isDead = true
       updateChar
     elsif !@isDead then
@@ -90,15 +95,15 @@ class Line
     if @isDead then
       return
     end
-    if @charX >= @screenInfoInstance.getWidth - 3 then
+    if @charX >= @screenInstance.getWidth - 3 then
       @charDirection = -1
     end
   end
 
   private
   def updateChar
-    @cursorInstance.write @charX - @charDirection, @line, getBack(@charX - @charDirection)
-    @cursorInstance.write @charX, @line, getCharText
+    @screenInstance.write @charX - @charDirection, @line, getBack(@charX - @charDirection)
+    @screenInstance.write @charX, @line, getCharText
   end
 
   def updateCharDirection
@@ -108,7 +113,7 @@ class Line
   end
 
   def getBack x
-    if x > @screenInfoInstance.getWidth - 3 then
+    if x > @screenInstance.getWidth - 3 then
       return "|"
     end
     return " "
@@ -126,7 +131,7 @@ end
 
 lines = []
 for y in 0..screen.getHeight do
-  lines.push Line.new(screen.getWidth, y, cursor, screen)
+  lines.push Line.new(screen.getWidth, y, screen)
 end
 
 Thread.new do
@@ -152,6 +157,7 @@ loop do
       line.moveChar
     end
   end
+  screen.draw
   sleep 0.05
 end
 
