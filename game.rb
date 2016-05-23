@@ -30,14 +30,16 @@ class Screen
 
   def write column, row, text
     if row >= @screenLines.length then
-      @screenLines.push ""
+      [@screenLines.length..row].each do
+        @screenLines.push ""
+      end
     end
     if column >= @screenLines[row].length then
       [@screenLines[row].length - 1 .. column - 1].each do
         @screenLines[row] << " ";
       end
     end
-    @screenLines[row].slice column, text.length
+    @screenLines[row].slice! column, text.length
     @screenLines[row].insert column, text
   end
 
@@ -134,12 +136,11 @@ for y in 0..screen.getHeight do
   lines.push Line.new(screen.getWidth, y, screen)
 end
 
+isDownA = false
 Thread.new do
   while (key = STDIN.getch) != "\C-c"
     if key.inspect == "\"a\"" then
-      lines.each do |line|
-        line.throwChar
-      end
+      isDownA = true
     end
   end
 
@@ -154,8 +155,14 @@ loop do
   end
   lines.each_with_index do |line, index|
     if index <= lastSpawnedLine then
+      if isDownA then
+        line.throwChar
+      end
       line.moveChar
     end
+  end
+  if isDownA then
+    isDownA = false
   end
   screen.draw
   sleep 0.05
