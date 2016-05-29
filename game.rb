@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 require "thread"
-require "io/console"
+require "curses"
 
 class Screen
   def initialize width, height
@@ -137,8 +137,11 @@ for y in 0..screen.getHeight do
 end
 
 isDownA = false
+Curses.noecho
+Curses.init_screen
+
 Thread.new do
-  while (key = STDIN.getch) != "\C-c"
+  while (key = Curses.getch) != "\C-c"
     if key.inspect == "\"a\"" then
       isDownA = true
     end
